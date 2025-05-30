@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pandia Géolocalisation</title>
+  <link rel="icon" href="logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: #0f1b2b;
+      color: #e0e6ed;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #1b2a3a;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    header img {
+      width: 40px;
+      margin-right: 1rem;
+    }
+
+    nav a {
+      margin: 0 1rem;
+      color: #b0c4d8;
+      text-decoration: none;
+      padding: 0.5rem;
+      border-radius: 6px;
+    }
+
+    nav a.active, nav a:hover {
+      background-color: #2a3c50;
+      color: white;
+    }
+
+    main {
+      padding: 2rem;
+      animation: fadeIn 0.5s ease-in-out;
+      min-height: 100vh;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .card {
+      background-color: #1c2736;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin-top: 2rem;
+    }
+
+    input {
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: none;
+      width: 100%;
+      background: #2a3c50;
+      color: white;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      background-color: #2b85ff;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 0.5rem;
+    }
+
+    button:hover {
+      background-color: #1a6fe0;
+    }
+
+    ul {
+      margin-top: 1rem;
+      line-height: 2;
+      list-style: none;
+    }
+
+    ul li::before {
+      content: "✅ ";
+    }
+
+    #map {
+      height: 500px;
+      border-radius: 12px;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    #map.fade-in {
+      animation: fadeInMap 0.6s ease-out;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInMap {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    footer {
+      text-align: center;
+      color: #5a7184;
+      font-size: 0.9rem;
+      margin: 2rem 0 0;
+    }
+
+    #loader {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #5a7184;
+      display: none;
+    }
+
+    .app-image {
+      width: 100%;
+      max-width: 700px;
+      display: block;
+      margin: 2rem auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logo.png" alt="Logo Pandia">
+    <nav>
+      <a href="#dashboard" class="active">🏠 Accueil</a>
+      <a href="#geoloc">📍 Géolocalisation</a>
+      <a href="#desktop">🖥️ Application & Contact</a>
+    </nav>
+  </header>
+  <main>
+    <section id="dashboard" class="section active">
+      <h2>🏠 Bienvenue sur Pandia</h2>
+      <div class="card">
+        <h3>🔍 À propos de Pandia</h3>
+        <p>Pandia Soft est leader dans le domaine de l'OSINT.<br>
+        Nos solutions permettent la collecte et l'analyse d'informations de manière intuitive et sécurisée.<br>
+        Avec des technologies de pointe et une interface premium, Pandia est votre allié dans l'investigation numérique.</p>
+        <h3 style="margin-top:2rem;">✨ Fonctionnalités principales</h3>
+        <ul>
+          <li>📍 Localisation précise via numéro</li>
+          <li>🔐 Interface simple et sécurisée</li>
+          <li>🖥️ Version desktop performante</li>
+          <li>🧰 Autres outils d'analyse en développement</li>
+        </ul>
+        <h3 style="margin-top:2rem;">❓ FAQ</h3>
+        <ul>
+          <li>🔒 Pandia est-il sécurisé ? Oui, 100% chiffré et privé.</li>
+          <li>📶 Est-ce que ça fonctionne partout ? Actuellement, uniquement pour les numéros français (+33).</li>
+          <li>💼 Ai-je besoin d’un compte ? Non, une licence suffit.</li>
+        </ul>
+        <p style="margin-top:2rem; font-size: 0.9rem; color: #7a8ca4;">Version : 1.0<br>Développeur : Pandia</p>
+      </div>
+    </section>
+
+    <section id="geoloc" class="section">
+      <h2>📍 Géolocalisation</h2>
+      <div class="card">
+        <input type="text" id="license" placeholder="Entrez votre licence (12 caractères)">
+        <input type="text" id="phone" placeholder="Entrez un numéro en +33...">
+        <button onclick="geolocate()">Géolocaliser</button>
+        <div id="loader">Recherche en cours...</div>
+        <div id="map"></div>
+      </div>
+    </section>
+
+    <section id="desktop" class="section">
+      <h2>🖥️ Application Desktop & Contact</h2>
+      <div class="card">
+        <p>L'application Desktop Pandia permet :</p>
+        <ul>
+          <li>🎧 D'écouter les appareils cibles</li>
+          <li>📱 D'utiliser des exploits Android</li>
+          <li>📍 De géolocaliser par numéro</li>
+          <li>💸 D'être accessible à un prix abordable</li>
+          <li>🧱 D'offrir une stabilité professionnelle</li>
+        </ul>
+        <img src="app-preview.png" alt="Aperçu de l'application" class="app-image">
+        <div style="text-align:center; margin-top: 4rem; margin-bottom: 2rem;">
+          <a href="https://discord.gg/DfKVu3mQFS" target="_blank">
+            <button>🔗 Rejoindre le Discord</button>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 Pandia Soft — Tous droits réservés.<br>
+    <span style="font-size:0.85rem; color:#7488a3;">Pandia n'encourage ni ne promeut l'espionnage, le harcèlement ou tout usage illégal de ses outils. L'utilisateur est seul responsable de ses actes.</span>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const links = document.querySelectorAll('nav a');
+    const sections = document.querySelectorAll('.section');
+
+    links.forEach(link => {
+      link.addEventListener('click', () => {
+        links.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        const target = link.getAttribute('href').substring(1);
+        sections.forEach(sec => sec.classList.remove('active'));
+        document.getElementById(target).classList.add('active');
+      });
+    });
+
+    let map;
+
+    function geolocate() {
+      const phone = document.getElementById('phone').value;
+      const license = document.getElementById('license').value;
+      const loader = document.getElementById('loader');
+      const mapEl = document.getElementById('map');
+
+      if (!/^\w{12}$/.test(license)) {
+        alert('Licence invalide. Entrez une licence de 12 caractères.');
+        return;
+      }
+
+      if (!phone.startsWith('+33')) {
+        alert('Seuls les numéros français (+33) sont pris en charge.');
+        return;
+      }
+
+      loader.style.display = 'block';
+
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data => {
+          loader.style.display = 'none';
+          const lat = data.latitude;
+          const lon = data.longitude;
+          if (!map) {
+            map = L.map('map').setView([lat, lon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+          } else {
+            map.setView([lat, lon], 13);
+          }
+          L.marker([lat, lon]).addTo(map).bindPopup(`Numéro localisé : ${phone}`).openPopup();
+          mapEl.classList.remove('fade-in');
+          void mapEl.offsetWidth;
+          mapEl.style.display = 'block';
+          mapEl.classList.add('fade-in');
+        });
+    }
+  </script>
+</body>
+</html>
