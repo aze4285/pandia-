@@ -242,45 +242,60 @@
 
     let map;
 
-    function geolocate() {
-      const phone = document.getElementById('phone').value;
-      const license = document.getElementById('license').value;
-      const loader = document.getElementById('loader');
-      const mapEl = document.getElementById('map');
+   function geolocate() {
+  const phone = document.getElementById('phone').value;
+  const license = document.getElementById('license').value;
+  const loader = document.getElementById('loader');
+  const mapEl = document.getElementById('map');
 
-      if (!/^\w{12}$/.test(license)) {
-        alert('Licence invalide. Entrez une licence de 12 caractères.');
-        return;
-      }
+  if (!phone.startsWith('+33')) {
+    alert('Seuls les numéros français (+33) sont pris en charge.');
+    return;
+  }
 
-      if (!phone.startsWith('+33')) {
-        alert('Seuls les numéros français (+33) sont pris en charge.');
-        return;
-      }
+  loader.style.display = 'block';
 
-      loader.style.display = 'block';
-
-      fetch('https://ipapi.co/json/')
-        .then(res => res.json())
-        .then(data => {
-          loader.style.display = 'none';
-          const lat = data.latitude;
-          const lon = data.longitude;
-          if (!map) {
-            map = L.map('map').setView([lat, lon], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-          } else {
-            map.setView([lat, lon], 13);
-          }
-          L.marker([lat, lon]).addTo(map).bindPopup(`Numéro localisé : ${phone}`).openPopup();
-          mapEl.classList.remove('fade-in');
-          void mapEl.offsetWidth;
-          mapEl.style.display = 'block';
-          mapEl.classList.add('fade-in');
-        });
+  fetch('https://pandia-api-acc7.vercel.app/api/verify-license', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ license: license })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.valid) {
+      loader.style.display = 'none';
+      alert('Licence invalide.');
+      return;
     }
+
+    // Licence valide, on continue avec la géolocalisation
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        loader.style.display = 'none';
+        const lat = data.latitude;
+        const lon = data.longitude;
+        if (!map) {
+          map = L.map('map').setView([lat, lon], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+        } else {
+          map.setView([lat, lon], 13);
+        }
+        L.marker([lat, lon]).addTo(map).bindPopup(`Numéro localisé : ${phone}`).openPopup();
+        mapEl.classList.remove('fade-in');
+        void mapEl.offsetWidth;
+        mapEl.style.display = 'block';
+        mapEl.classList.add('fade-in');
+      });
+  })
+  .catch(() => {
+    loader.style.display = 'none';
+    alert("Erreur lors de la vérification.");
+  });
+}
+
   </script>
 </body>
 </html>
